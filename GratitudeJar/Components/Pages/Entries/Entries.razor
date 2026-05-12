@@ -3,7 +3,7 @@
 @inject AuthService AuthService
 @inject IEntryRepository EntryRepo
 
-<PageTitle>GratitudeJar — Entries</PageTitle>
+<PageTitle>Citadel — Entries</PageTitle>
 
 <AppHeader Subtitle="Fill Your Jar with What Matters" />
 
@@ -11,26 +11,6 @@
     <div class="jar-header-section"></div>
 
     <div class="entries-body">
-        @if (recentEntries.Count > 0)
-        {
-            <div class="entries-section-label">Recently Added</div>
-            <div class="entries-recent-grid">
-                @foreach (var entry in recentEntries.Take(4))
-                {
-                    <div class="entry-thumb">
-                        @if (entry is MemoryEntry mem && !string.IsNullOrEmpty(mem.ImagePath))
-                        {
-                            <img src="@mem.ImagePath" alt="@entry.Title" />
-                        }
-                        else
-                        {
-                            <div class="entry-thumb-placeholder">&#128214;</div>
-                        }
-                    </div>
-                }
-            </div>
-        }
-
         <a href="/entries/add" class="entries-action-card">
             <div class="entries-action-icon">&#43;</div>
             <div class="entries-action-text">
@@ -40,12 +20,49 @@
         </a>
 
         <a href="/entries/edit" class="entries-action-card">
-            <div class="entries-action-icon">&#9998;</div>
+            <span style="font-size:1.5rem; flex-shrink:0;">✏️</span>
             <div class="entries-action-text">
-                <h4>Edit</h4>
-                <p>Rewrite Existing Entry</p>
+                <h4>View</h4>
+                <p>View All Entries</p>
             </div>
         </a>
+
+        @if (recentEntries.Count > 0)
+        {
+            <div class="entries-section-label">Recently Added</div>
+            <div class="entries-recent-list">
+                @foreach (var entry in recentEntries.Take(3))
+                {
+                    @if (entry is MemoryEntry mem && !string.IsNullOrEmpty(mem.ImagePath))
+                    {
+                        <div class="entry-memory-card">
+                            <img class="entry-memory-img" src="@mem.ImagePath" alt="@entry.Title" />
+                            <div class="entry-memory-info">
+                                <div class="entry-slim-title">@entry.Title</div>
+                                <div class="entry-slim-date">@entry.EntryDate.ToString("MMM d, yyyy")</div>
+                                @if (!string.IsNullOrEmpty(entry.Mood))
+                                {
+                                    <span class="entry-slim-mood">@entry.Mood</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="entry-slim-row">
+                            <div class="entry-slim-text">
+                                <div class="entry-slim-title">@entry.Title</div>
+                                <div class="entry-slim-date">@entry.EntryDate.ToString("MMM d, yyyy")</div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(entry.Mood))
+                            {
+                                <span class="entry-slim-mood">@entry.Mood</span>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        }
     </div>
 </div>
 

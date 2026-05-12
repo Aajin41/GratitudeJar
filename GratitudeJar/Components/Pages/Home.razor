@@ -3,7 +3,7 @@
 @inject AuthService AuthService
 @inject IEntryRepository EntryRepo
 
-<PageTitle>GratitudeJar — Home</PageTitle>
+<PageTitle>Citadel — Home</PageTitle>
 
 <AppHeader Subtitle="Your Daily Gratitude" />
 
@@ -14,44 +14,65 @@
     }
     else
     {
-        <div class="home-welcome-bar">
-            <h3>Welcome back, @currentUser.FullName!</h3>
-            <p>Let's add another moment worth keeping.</p>
-        </div>
+        <div class="jar-header-section"></div>
 
         <div class="home-body">
+            <div class="home-greeting">
+                <div class="home-greeting-name">Welcome back, @currentUser.FullName!</div>
+                <div class="home-greeting-sub">Let's add another moment worth keeping.</div>
+            </div>
+
             <div class="streak-container">
-                <div class="streak-flame-ring">&#128293;</div>
+                @if (streak == 0)
+                {
+                    <img src="/images/streak_none.png" class="streak-none-img" alt="No streak yet" />
+                }
+                else
+                {
+                    <div class="streak-ring">🔥</div>
+                }
                 <div class="streak-label">@streak Streak!</div>
             </div>
 
-            @if (latestEntry is not null)
-            {
-                <div class="entry-preview-card">
-                    <div class="entry-preview-header">
-                        <div>
-                            <div class="entry-preview-feeling">You are feeling</div>
-                            <div class="entry-preview-mood">@(string.IsNullOrEmpty(latestEntry.Mood) ? "Grateful" : latestEntry.Mood)</div>
+            <div class="mood-section">
+                <div class="section-label">Mood Distribution</div>
+                @if (moodSlices.Count > 0)
+                {
+                    <div class="mood-chart-row">
+                        <div class="mood-pie" style="background: @moodGradient;"></div>
+                        <div class="mood-legend">
+                            @foreach (var slice in moodSlices)
+                            {
+                                <div class="mood-legend-item">
+                                    <div class="mood-dot" style="background: @slice.Color;"></div>
+                                    <span class="mood-legend-text">@slice.Mood</span>
+                                    <span class="mood-legend-pct">@slice.Percent%</span>
+                                </div>
+                            }
                         </div>
-                        <span style="color: rgba(255,255,255,0.5); font-size: 1.2rem;">&#8942;</span>
                     </div>
-                    <div class="entry-preview-body">@latestEntry.Content</div>
-                    @if (latestEntry is MemoryEntry mem && !string.IsNullOrEmpty(mem.ImagePath))
-                    {
-                        <img class="entry-preview-img" src="@mem.ImagePath" alt="Entry photo" />
-                    }
-                    else
-                    {
-                        <div class="entry-preview-placeholder">&#128214;</div>
-                    }
-                </div>
-            }
-            else
+                }
+                else
+                {
+                    <div class="no-moods-hint">Add entries with moods to see your patterns!</div>
+                }
+            </div>
+
+            @if (latestEntry is not null && !string.IsNullOrWhiteSpace(latestEntry.Mood))
             {
-                <div class="no-entries-hint">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">&#129814;</div>
-                    <strong>Your jar is empty!</strong><br />
-                    Tap <a href="/entries/add" style="color: var(--color-primary); font-weight: 700;">+ Add Entry</a> to fill it with your first moment.
+                string moodPrefix, moodSuffix;
+                var dateStr = latestEntry.EntryDate.ToString("MMMM d, yyyy");
+                if (latestEntry.EntryDate.Date == DateTime.UtcNow.Date) {
+                    moodPrefix = "You are feeling"; moodSuffix = " today · " + dateStr;
+                } else if (latestEntry.EntryDate.Date == DateTime.UtcNow.Date.AddDays(-1)) {
+                    moodPrefix = "Yesterday you were feeling"; moodSuffix = " · " + dateStr;
+                } else {
+                    moodPrefix = "On " + latestEntry.EntryDate.ToString("MMMM d") + ", you were feeling"; moodSuffix = string.Empty;
+                }
+                <div class="current-mood-card">
+                    <p class="current-mood-text">
+                        @moodPrefix <strong class="current-mood-word">@latestEntry.Mood</strong>@moodSuffix
+                    </p>
                 </div>
             }
         </div>
@@ -61,9 +82,19 @@
 <BottomNav />
 
 @code {
+    private record MoodSlice(string Mood, int Count, int Percent, string Color);
+
+    private static readonly string[] MoodPalette =
+    {
+        "#4CAF50", "#2196F3", "#FFC107", "#E91E63", "#9C27B0",
+        "#FF5722", "#00BCD4", "#8BC34A", "#FF9800", "#607D8B"
+    };
+
     private GratitudeJar.Models.User? currentUser;
     private int streak;
     private Entry? latestEntry;
+    private List<MoodSlice> moodSlices = new();
+    private string moodGradient = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,5 +106,38 @@
 
         var jar = new JarApp { Profile = currentUser, Entries = all };
         streak = jar.GetStreak();
+
+        var groups = all
+            .GroupBy(e => string.IsNullOrWhiteSpace(e.Mood) ? "Other" : e.Mood)
+            .OrderByDescending(g => g.Count())
+            .Take(6)
+            .ToList();
+
+        var total = groups.Sum(g => g.Count());
+        if (total > 0)
+        {
+            moodSlices = groups
+                .Select((g, i) => new MoodSlice(
+                    g.Key,
+                    g.Count(),
+                    (int)Math.Round(g.Count() * 100.0 / total),
+                    MoodPalette[i % MoodPalette.Length]
+                ))
+                .ToList();
+
+            var segments = new List<string>();
+            float deg = 0f;
+            foreach (var slice in moodSlices)
+            {
+                var size = slice.Count * 360f / total;
+                segments.Add($"{slice.Color} {deg:F1}deg {(deg + size):F1}deg");
+                deg += size;
+            }
+            moodGradient = $"conic-gradient({string.Join(", ", segments)})";
+        }
+        else
+        {
+            moodGradient = "conic-gradient(var(--color-surface) 0deg 360deg)";
+        }
     }
 }

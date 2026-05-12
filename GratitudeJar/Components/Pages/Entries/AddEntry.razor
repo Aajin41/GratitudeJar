@@ -5,13 +5,9 @@
 @inject NavigationManager Nav
 @inject IWebHostEnvironment Env
 
-<PageTitle>GratitudeJar — Add Entry</PageTitle>
+<PageTitle>Citadel — Add Entry</PageTitle>
 
-<AppHeader Subtitle="Create the Memories Worth Keeping" />
-
-<div class="main-content">
-    <div class="jar-header-section"></div>
-
+<div class="standalone-content">
     <div class="page-body">
         <div class="back-row">
             <button class="back-btn" @onclick="GoBack">&#8249;</button>
@@ -55,20 +51,10 @@
                 </div>
             }
 
-            <div>
-                <label class="form-label-plain">@ContentLabel</label>
-                <textarea class="form-input form-textarea" placeholder="Write your thoughts here…" @bind="content"></textarea>
-            </div>
-
-            <div>
-                <label class="form-label-plain">Mood</label>
-                <input type="text" class="form-input" placeholder="Happy, Grateful, Peaceful…" @bind="mood" />
-            </div>
-
             @if (selectedType == "Memory")
             {
                 <div class="photo-upload-section">
-                    <label class="form-label-plain">Photo (optional)</label>
+                    <label class="form-label-plain">Photo</label>
                     <div class="photo-grid">
                         <label class="photo-add-btn">
                             <span class="plus">+</span>
@@ -87,14 +73,22 @@
                 </div>
             }
 
+            <div>
+                <label class="form-label-plain">@ContentLabel</label>
+                <textarea class="form-input form-textarea" placeholder="Write your thoughts here…" @bind="content"></textarea>
+            </div>
+
+            <div>
+                <label class="form-label-plain">Mood</label>
+                <input type="text" class="form-input" placeholder="Happy, Grateful, Peaceful…" @bind="mood" />
+            </div>
+
             <button class="btn btn-primary" @onclick="SaveEntry" disabled="@isSaving">
                 @(isSaving ? "Saving…" : "Save Entry")
             </button>
         </div>
     </div>
 </div>
-
-<BottomNav />
 
 @code {
     private GratitudeJar.Models.User? currentUser;
@@ -110,9 +104,13 @@
     private IBrowserFile? pendingFile;
     private string previewSrc = string.Empty;
 
+    [SupplyParameterFromQuery] public string? Mood { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         currentUser = await AuthService.GetCurrentUserAsync();
+        if (!string.IsNullOrEmpty(Mood))
+            mood = Mood;
     }
 
     private string TitleLabel => selectedType switch
@@ -137,9 +135,11 @@
     {
         var file = e.File;
         pendingFile = file;
-        var buffer = new byte[Math.Min(file.Size, 200_000)];
-        await file.OpenReadStream(5 * 1024 * 1024).ReadAsync(buffer);
-        previewSrc = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
+        var bytes = ms.ToArray();
+        var previewBytes = bytes.Length > 200_000 ? bytes[..200_000] : bytes;
+        previewSrc = $"data:{file.ContentType};base64,{Convert.ToBase64String(previewBytes)}";
     }
 
     private void RemovePhoto()

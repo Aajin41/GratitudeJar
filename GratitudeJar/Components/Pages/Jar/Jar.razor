@@ -5,7 +5,7 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<PageTitle>GratitudeJar — Your Jar</PageTitle>
+<PageTitle>Citadel — Your Jar</PageTitle>
 
 <AppHeader Subtitle="Your Jar of Moments" />
 
@@ -13,8 +13,6 @@
     <div class="jar-header-section"></div>
 
     <div class="jar-body">
-        <button class="shake-bubble" @onclick="ShakeJar">Shake Me! &#128073;</button>
-
         <div class="jar-wrapper @(isShaking ? "jar--shaking" : "")" @onclick="ShakeJar">
             <div class="jar-lid-rim"></div>
             <div class="jar-lid"></div>
@@ -40,27 +38,28 @@
             </div>
         </div>
 
-        <div class="jar-progress-section">
-            <div class="jar-progress-bar-track">
-                <div class="jar-progress-bar-fill" style="width: @(fillPercent)%;"></div>
-            </div>
-        </div>
+        <p class="jar-tap-hint">Tap the jar to find a moment ✨</p>
 
         @if (showModal && randomEntry is not null)
         {
             <div class="modal-overlay" @onclick="CloseModal">
                 <div class="found-moment-card" @onclick:stopPropagation="true">
                     <button class="found-moment-close" @onclick="CloseModal">&#10005;</button>
-                    <div class="found-moment-title">A Found Moment</div>
-                    <div class="found-moment-meta">
-                        <span>@randomEntry.EntryDate.ToString("MMMM d, yyyy")</span>
-                        <span>&#128578;</span>
-                    </div>
-                    <div class="found-moment-content">@randomEntry.Content</div>
-                    @if (!string.IsNullOrEmpty(randomEntry.Mood))
+                    @if (randomEntry is MemoryEntry memModal && !string.IsNullOrEmpty(memModal.ImagePath))
                     {
-                        <div class="found-moment-mood">@randomEntry.Mood</div>
+                        <img class="found-moment-img" src="@memModal.ImagePath" alt="Memory photo" />
                     }
+                    <div class="found-moment-body">
+                        <div class="found-moment-title">A Found Moment</div>
+                        <div class="found-moment-meta">
+                            <span>@randomEntry.EntryDate.ToString("MMMM d, yyyy")</span>
+                            @if (!string.IsNullOrEmpty(randomEntry.Mood))
+                            {
+                                <span class="found-moment-mood">@randomEntry.Mood</span>
+                            }
+                        </div>
+                        <div class="found-moment-content">@randomEntry.Content</div>
+                    </div>
                 </div>
             </div>
         }

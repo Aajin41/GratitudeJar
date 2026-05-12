@@ -4,13 +4,9 @@
 @inject IEntryRepository EntryRepo
 @inject NavigationManager Nav
 
-<PageTitle>GratitudeJar — Edit Entry</PageTitle>
+<PageTitle>Citadel — Edit Entry</PageTitle>
 
-<AppHeader Subtitle="Find Freedom in the Refinement." />
-
-<div class="main-content">
-    <div class="jar-header-section"></div>
-
+<div class="standalone-content">
     <div class="page-body">
         <div class="back-row">
             <button class="back-btn" @onclick='() => Nav.NavigateTo("/entries")'>&#8249;</button>
@@ -38,7 +34,7 @@
                         }
                         else
                         {
-                            <div class="entry-list-thumb-placeholder" @onclick='() => Nav.NavigateTo($"/entries/edit/{entry.EntryId}")'>&#128214;</div>
+                            <div class="entry-list-thumb-placeholder" @onclick='() => Nav.NavigateTo($"/entries/edit/{entry.EntryId}")'>✏️</div>
                         }
                         <button class="entry-list-delete" @onclick="() => ConfirmDelete(entry)">&#128465;</button>
                     </div>
@@ -53,8 +49,6 @@
     EntryTitle="@(entryToDelete?.Title ?? "")"
     OnConfirm="DeleteEntry"
     OnCancel="() => showDeleteModal = false" />
-
-<BottomNav />
 
 @code {
     private GratitudeJar.Models.User? currentUser;

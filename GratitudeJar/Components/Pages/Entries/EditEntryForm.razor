@@ -5,13 +5,9 @@
 @inject NavigationManager Nav
 @inject IWebHostEnvironment Env
 
-<PageTitle>GratitudeJar — Edit Entry</PageTitle>
+<PageTitle>Citadel — Edit Entry</PageTitle>
 
-<AppHeader Subtitle="Find Freedom in the Refinement." />
-
-<div class="main-content">
-    <div class="jar-header-section"></div>
-
+<div class="standalone-content">
     <div class="page-body">
         <div class="back-row">
             <button class="back-btn" @onclick="GoBack">&#8249;</button>
@@ -34,35 +30,67 @@
             }
 
             <div class="entry-form">
+                <div>
+                    <label class="form-label-plain">Title</label>
+                    <input type="text" class="form-input" placeholder="Entry title" @bind="title" />
+                </div>
+
+                <div style="display:flex; gap:var(--space-md);">
+                    <div style="flex:1;">
+                        <label class="form-label-plain">Type</label>
+                        <div class="form-input" style="background:var(--color-surface); color:var(--color-text-muted); cursor:default;">@entryTypeName</div>
+                    </div>
+                    <div style="flex:1;">
+                        <label class="form-label-plain">Date</label>
+                        <div class="form-input" style="background:var(--color-surface); color:var(--color-text-muted); cursor:default;">@entry.EntryDate.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</div>
+                    </div>
+                </div>
+
                 @if (entry is MemoryEntry memEntry)
                 {
                     <div class="photo-upload-section">
                         <label class="form-label-plain">Photo</label>
-                        <div class="photo-grid">
-                            @if (string.IsNullOrEmpty(previewSrc) && string.IsNullOrEmpty(memEntry.ImagePath))
-                            {
+                        @if (!string.IsNullOrEmpty(previewSrc))
+                        {
+                            <div class="photo-preview-full">
+                                <img src="@previewSrc" alt="new photo" />
+                                <button type="button" class="photo-remove-btn" @onclick="RemoveNewPhoto">&#10005;</button>
+                            </div>
+                        }
+                        else if (!string.IsNullOrEmpty(memEntry.ImagePath) && !removeExistingPhoto)
+                        {
+                            <div class="photo-preview-full">
+                                <img src="@memEntry.ImagePath" alt="photo" />
+                                <button type="button" class="photo-remove-btn" @onclick="() => removeExistingPhoto = true">&#10005;</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="photo-grid">
                                 <label class="photo-add-btn">
                                     <span class="plus">+</span>
                                     <span>Add</span>
                                     <InputFile OnChange="OnPhotoSelected" accept=".jpg,.jpeg,.png,.webp" class="hidden-file-input" />
                                 </label>
-                            }
-                            @if (!string.IsNullOrEmpty(previewSrc))
-                            {
-                                <div class="photo-thumb-wrap">
-                                    <img src="@previewSrc" alt="new photo" />
-                                    <button type="button" class="photo-remove-btn" @onclick="RemoveNewPhoto">&#10005;</button>
-                                </div>
-                            }
-                            else if (!string.IsNullOrEmpty(memEntry.ImagePath) && !removeExistingPhoto)
-                            {
-                                <div class="photo-thumb-wrap">
-                                    <img src="@memEntry.ImagePath" alt="photo" />
-                                    <button type="button" class="photo-remove-btn" @onclick="() => removeExistingPhoto = true">&#10005;</button>
-                                </div>
-                            }
-                        </div>
+                            </div>
+                        }
                         <div class="photo-hint">Tap &#10005; to remove or + to add a photo</div>
+                    </div>
+                }
+
+                @if (entry is QuoteEntry)
+                {
+                    <div>
+                        <label class="form-label-plain">Author / Source</label>
+                        <input type="text" class="form-input" placeholder="Who said it?" @bind="author" />
+                    </div>
+                }
+
+                @if (entry is MilestoneEntry)
+                {
+                    <div>
+                        <label class="form-label-plain">Milestone</label>
+                        <input type="text" class="form-input" placeholder="Describe this milestone" @bind="milestone" />
                     </div>
                 }
 
@@ -89,18 +117,27 @@
     </div>
 </div>
 
-<BottomNav />
-
 @code {
     [Parameter] public int Id { get; set; }
 
     private GratitudeJar.Models.User? currentUser;
     private Entry? entry;
+    private string title = string.Empty;
     private string content = string.Empty;
     private string mood = string.Empty;
+    private string author = string.Empty;
+    private string milestone = string.Empty;
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
     private bool isSaving = false;
+
+    private string entryTypeName => entry switch
+    {
+        MemoryEntry    => "Memory",
+        MilestoneEntry => "Milestone",
+        QuoteEntry     => "Quote",
+        _              => "Entry"
+    };
 
     private IBrowserFile? newFile;
     private string previewSrc = string.Empty;
@@ -114,8 +151,11 @@
         entry = await EntryRepo.GetById(Id, currentUser.Id);
         if (entry is null) return;
 
+        title = entry.Title;
         content = entry.Content;
         mood = entry.Mood;
+        if (entry is QuoteEntry q) author = q.Author;
+        if (entry is MilestoneEntry m) milestone = m.Milestone;
     }
 
     private async Task OnPhotoSelected(InputFileChangeEventArgs e)
@@ -145,8 +185,11 @@
         errorMessage = string.Empty;
         successMessage = string.Empty;
 
+        entry.Title = title.Trim();
         entry.Content = content.Trim();
         entry.Mood = mood.Trim();
+        if (entry is QuoteEntry q) q.Author = author.Trim();
+        if (entry is MilestoneEntry m) m.Milestone = milestone.Trim();
 
         if (entry is MemoryEntry mem)
         {

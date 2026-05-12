@@ -5,13 +5,9 @@
 @inject NavigationManager Nav
 @inject IWebHostEnvironment Env
 
-<PageTitle>GratitudeJar — Manage Profile</PageTitle>
+<PageTitle>Citadel — Manage Profile</PageTitle>
 
-<AppHeader Subtitle="A Glimpse of You" />
-
-<div class="main-content">
-    <div class="jar-header-section"></div>
-
+<div class="standalone-content">
     <div class="page-body">
         @if (currentUser is null)
         {
@@ -85,8 +81,6 @@
     </div>
 </div>
 
-<BottomNav />
-
 @code {
     private GratitudeJar.Models.User? currentUser;
     private string fullName = string.Empty;
@@ -96,7 +90,10 @@
     private string successMessage = string.Empty;
     private bool isSaving = false;
     private string avatarPreview = string.Empty;
-    private IBrowserFile? avatarFile;
+
+    private byte[]? _pendingAvatarBytes;
+    private string _pendingAvatarExt = string.Empty;
+    private string _pendingAvatarContentType = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,15 +101,24 @@
         if (currentUser is null) return;
         fullName = currentUser.FullName;
         username = currentUser.Username;
-        bio = currentUser.Bio;
+        bio = currentUser.Bio ?? string.Empty;
     }
 
     private async Task OnAvatarSelected(InputFileChangeEventArgs e)
     {
-        avatarFile = e.File;
-        var buffer = new byte[Math.Min(avatarFile.Size, 200_000)];
-        await avatarFile.OpenReadStream(5 * 1024 * 1024).ReadAsync(buffer);
-        avatarPreview = $"data:{avatarFile.ContentType};base64,{Convert.ToBase64String(buffer)}";
+        var file = e.File;
+        _pendingAvatarExt = Path.GetExtension(file.Name).ToLowerInvariant();
+        _pendingAvatarContentType = file.ContentType;
+
+        using var stream = file.OpenReadStream(5 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        _pendingAvatarBytes = ms.ToArray();
+
+        var previewBytes = _pendingAvatarBytes.Length > 200_000
+            ? _pendingAvatarBytes[..200_000]
+            : _pendingAvatarBytes;
+        avatarPreview = $"data:{_pendingAvatarContentType};base64,{Convert.ToBase64String(previewBytes)}";
     }
 
     private async Task SaveProfile()
@@ -123,27 +129,36 @@
         successMessage = string.Empty;
 
         string? newPhotoPath = null;
-        if (avatarFile is not null)
+        if (_pendingAvatarBytes is { Length: > 0 })
         {
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            if (!allowed.Contains(_pendingAvatarExt))
+            {
+                errorMessage = "Unsupported image format.";
+                isSaving = false;
+                return;
+            }
             var dir = Path.Combine(Env.WebRootPath, "uploads", currentUser.Id.ToString());
             Directory.CreateDirectory(dir);
-            var ext = Path.GetExtension(avatarFile.Name).ToLowerInvariant();
-            var fileName = $"avatar_{Guid.NewGuid()}{ext}";
+            var fileName = $"avatar_{Guid.NewGuid()}{_pendingAvatarExt}";
             var fullPath = Path.Combine(dir, fileName);
-            await using var stream = avatarFile.OpenReadStream(5 * 1024 * 1024);
-            await using var fs = File.Create(fullPath);
-            await stream.CopyToAsync(fs);
+            await File.WriteAllBytesAsync(fullPath, _pendingAvatarBytes);
             newPhotoPath = $"/uploads/{currentUser.Id}/{fileName}";
         }
 
-        var (success, error) = await UserService.UpdateProfileAsync(currentUser.Id, fullName, username, bio, newPhotoPath);
+        var (success, error) = await UserService.UpdateProfileAsync(
+            currentUser.Id, fullName, username, bio, newPhotoPath);
+
         if (success)
         {
             successMessage = "Profile updated!";
+            _pendingAvatarBytes = null;
             currentUser = await AuthService.GetCurrentUserAsync();
         }
         else
+        {
             errorMessage = error;
+        }
 
         isSaving = false;
     }

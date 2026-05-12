@@ -16,6 +16,8 @@ public class JarApp
         var dates = Entries.Select(e => e.EntryDate.Date).Distinct().ToHashSet();
         int streak = 0;
         var day = DateTime.UtcNow.Date;
+        if (!dates.Contains(day))
+            day = day.AddDays(-1);
         while (dates.Contains(day))
         {
             streak++;
