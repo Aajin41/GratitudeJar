@@ -142,7 +142,7 @@ CITADEL follows a **modular component-based architecture** — each feature live
 
 ```
 ┌──────────────────────────────────────────────┐
-│              CITADEL Application              │
+│              CITADEL Application             │
 │  (ASP.NET Core + Blazor Component Framework) │
 ├──────────┬───────────┬──────────┬────────────┤
 │  Journal │ Gratitude │  Mood    │  Streak    │
