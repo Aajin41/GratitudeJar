@@ -10,7 +10,7 @@
     <div class="page-body">
         <div class="back-row">
             <button class="back-btn" @onclick='() => Nav.NavigateTo("/entries")'>&#8249;</button>
-            <h2>Edit Entry</h2>
+            <h2>View Entry</h2>
         </div>
 
         @if (entries.Count == 0)
@@ -28,14 +28,7 @@
                             <div class="entry-list-preview">@Truncate(entry.Content, 60)</div>
                             <div class="entry-list-date">@GetDateLabel(entry.EntryDate)</div>
                         </div>
-                        @if (entry is MemoryEntry mem && !string.IsNullOrEmpty(mem.ImagePath))
-                        {
-                            <img class="entry-list-thumb" src="@mem.ImagePath" alt="@entry.Title" @onclick='() => Nav.NavigateTo($"/entries/edit/{entry.EntryId}")' />
-                        }
-                        else
-                        {
-                            <div class="entry-list-thumb-placeholder" @onclick='() => Nav.NavigateTo($"/entries/edit/{entry.EntryId}")'>✏️</div>
-                        }
+                        <div class="entry-list-thumb-placeholder" @onclick='() => Nav.NavigateTo($"/entries/edit/{entry.EntryId}")'>✏️</div>
                         <button class="entry-list-delete" @onclick="() => ConfirmDelete(entry)">&#128465;</button>
                     </div>
                 }
