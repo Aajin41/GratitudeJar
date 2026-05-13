@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="AOOP_Assets/ReadMeheader.png" width="100%" alt="CITADEL Header">
+  <img src="img/ReadMeheader.png" width="100%" alt="CITADEL Header">
 </p>
 
 <p align="center">
@@ -243,7 +243,7 @@ Your journaling identity in one place.
 ## UML Design
 
 <p align="center">
-  <img src="path/to/your/uml-diagram.png" width="90%" alt="UML Class Diagram">
+  <img src="img/UML Diagram.png" width="90%" alt="UML Class Diagram">
 </p>
 
 ---
