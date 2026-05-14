@@ -76,19 +76,6 @@ Every memory deserves the right container. CITADEL supports four:
 | 📸 **Memory** | Preserve vivid moments before they fade |
 | 📝 **Journal** | Free-form daily reflections, unfiltered |
 
-### Core Modules
-
-```
-CITADEL Application
- ├── 🫙 Gratitude Jar       → Shake to rediscover a random past memory
- ├── 📖 Journal System      → Create, edit, and manage all entry types
- ├── 😊 Mood Analytics      → Visualize emotional trends over time
- ├── 🔥 Streak System       → Stay consistent, build the journaling habit
- └── 👤 Profile Module      → Your personal activity dashboard
-```
-
-All modules share a **single local SQLite data layer** — no internet required, no data leaves your device.
-
 ---
 
 ## Getting Started
