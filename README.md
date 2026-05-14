@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/.NET-10-purple?style=for-the-badge&logo=dotnet&logoColor=white">
   <img src="https://img.shields.io/badge/Architecture-Component--Based-00C853?style=for-the-badge&logo=icloud&logoColor=white">
   <img src="https://img.shields.io/badge/Database-SQLite-03A9F4?style=for-the-badge&logo=sqlite&logoColor=white">
-  <img src="https://img.shields.io/badge/Status-Prototype-FFB300?style=for-the-badge&logo=github&logoColor=white">
+  <img src="https://img.shields.io/badge/Status-Web Application-FFB300?style=for-the-badge&logo=github&logoColor=white">
 </p>
 
 <p align="center">
@@ -63,7 +63,7 @@ Here's what CITADEL addresses:
 
 ## What is CITADEL
 
-CITADEL is a **modular mobile journaling prototype** designed around emotional awareness and reflective thinking. At its heart is the **Gratitude Jar** — a digital vessel that stores your best moments and surfaces them when you need them most.
+CITADEL is a **personal mobile journaling web application** designed around emotional awareness and reflective thinking. At its heart is the **Gratitude Jar** — a digital vessel that stores your best moments and surfaces them when you need them most.
 
 ### Entry Types
 
@@ -237,7 +237,7 @@ Your journaling identity in one place.
 
 ## Roadmap
 
-CITADEL is a prototype with a clear vision for what comes next.
+CITADEL is a web application for mobile devices with a clear vision for what comes next.
 
 **Near-term:**
 - Cloud sync — optional backup and cross-device access
